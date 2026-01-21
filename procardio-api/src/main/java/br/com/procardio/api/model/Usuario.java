@@ -40,13 +40,33 @@ public class Usuario implements UserDetails {
 
     @Embedded
     private Endereco endereco;
+    //aula3
+    @ElementCollection(fetch = FetchType.EAGER)// colocar LAZY se quiser carregar quando tiver muita acesso.
+    @CollectionTable(name = "tb_perfis", joinColumns = @JoinColumn(name = "usuario_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "perfil")
+    private Set<Perfil> perfis;
 
+    public void adicionarPerfil(Perfil perfil) {
+        perfis.add(perfil);
+    }
+    //até aqui aula3
     public Usuario toModel(UsuarioDTO dto) {
         Usuario usuario = new Usuario();
 
         usuario.setNome(dto.nome());
         usuario.setEmail(dto.email());
         usuario.setSenha(dto.senha());
+
+        //aula3
+        if(Objects.nonNull(dto.perfis())) {
+            dto.perfis().stream().forEach(perfil -> {
+            if(Objects.nonNull(perfil)) {
+                usuario.adicionarPerfil(perfil);
+            }
+        });
+        }
+        //até aqui aula3
 
         if (dto.cep() != null || dto.numero() != null || dto.complemento() != null) {
             Endereco endereco = new Endereco();
@@ -63,7 +83,9 @@ public class Usuario implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        return this.perfis.stream()
+                .map(perfil -> new SimpleGrantedAuthority(perfil.getRole()))
+                .collect(Collectors.toList());
     }
 
     @Override

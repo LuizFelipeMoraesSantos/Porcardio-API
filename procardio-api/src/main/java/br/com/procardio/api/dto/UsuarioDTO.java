@@ -12,5 +12,6 @@ public record UsuarioDTO(
     String cep,
     String numero,
     String complemento
+    Set<Perfil> perfis
 ) {
 }
