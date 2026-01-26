@@ -17,8 +17,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+// REMOVIDO: import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+// REMOVIDO: import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -28,7 +28,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 
 @Configuration
-@EnableWebSecurity  //liga a segurança web do spring
+@EnableWebSecurity
 public class SecurityConfig {
 
     @Autowired
@@ -41,27 +41,22 @@ public class SecurityConfig {
     private TokenService tokenService;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(csrf -> csrf.disable())
-                    .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                    .authorizeHttpRequests(req -> {
-                        req.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll();
-                        req.anyRequest().authenticated();
-                    })
-
-                    .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
-                    .build();
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(req -> {
+                    req.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll();
+                    req.anyRequest().authenticated();
+                })
+                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 
     public AuthenticationSuccessHandler googleLoginSucessHandler() {
         return new AuthenticationSuccessHandler() {
@@ -72,25 +67,19 @@ public class SecurityConfig {
                     throws IOException, ServletException {
 
                 OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-
                 Usuario usuario = googleAuthService.processarUsuarioGoogle(oAuth2User);
-
                 String tokenJWT = tokenService.gerarToken(usuario);
 
                 response.setContentType("application/json");
 
+
                 TokenDTO tokenDTO = new TokenDTO(tokenJWT);
-
                 ObjectMapper objectMapper = new ObjectMapper();
-
                 String tokenJson = objectMapper.writeValueAsString(tokenDTO);
 
-                response.setContentType("application/json");
-                response.getWriter().write(new TokenDTO(tokenJWT).toString());
+                response.getWriter().write(tokenJson);
                 response.getWriter().flush();
-
             }
         };
     }
-    
 }
