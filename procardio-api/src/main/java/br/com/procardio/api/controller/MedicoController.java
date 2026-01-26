@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("api/medicos")
-export class MedicoController {
+class MedicoController {
 
     @Autowired
     private MedicoService medicoService;
@@ -19,7 +19,7 @@ export class MedicoController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteMedico(@PathVariable Long id) {
-        medicoService.deleteMedico(id);
+        medicoService.deletarMedico(id);
 
         return ResponseEntity.noContent().build();
     }
